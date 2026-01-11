@@ -5,11 +5,11 @@ import { encode } from './base62';
 const CACHE_TTL = 24 * 60 * 60; // 24 hours
 
 export class UrlService {
-    static async shorten(originalUrl: string, host?: string): Promise<string> {
+    static async shorten(originalUrl: string, userId?: number): Promise<string> {
         // 1. Insert to get ID
         const result = await db.query(
-            'INSERT INTO urls (original_url) VALUES ($1) RETURNING id',
-            [originalUrl]
+            'INSERT INTO urls (original_url, user_id) VALUES ($1, $2) RETURNING id',
+            [originalUrl, userId || null]
         );
         const id = result.rows[0].id;
 

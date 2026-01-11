@@ -28,6 +28,14 @@ const mockRedis = {
         return true;
     },
     xAdd: async (key: string, id: string, data: any) => {
+        // Simulate "Worker" processing immediately for local dev
+        InMemoryStore.analytics.push({
+            short_code: data.shortCode,
+            ip_address: data.ip,
+            user_agent: data.userAgent,
+            referer: data.referer,
+            timestamp: data.timestamp
+        });
         InMemoryStore.stream.push({ id: Date.now().toString(), message: data });
         return '1-0';
     },

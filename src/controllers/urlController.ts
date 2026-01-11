@@ -9,7 +9,8 @@ export class UrlController {
     static async shorten(req: Request, res: Response) {
         try {
             const schema = z.object({
-                url: z.string().url()
+                url: z.string().url(),
+                customAlias: z.string().optional() // Prepare for custom alias support if needed, but for now ignoring or we can support it later
             });
 
             const { url } = schema.parse(req.body);
@@ -17,7 +18,10 @@ export class UrlController {
             // Use configured BASE_URL (public domain)
             const baseUrl = config.BASE_URL;
 
-            const shortCode = await UrlService.shorten(url);
+            // Extract user ID from request (populated by auth middleware)
+            const userId = (req as any).user?.userId;
+
+            const shortCode = await UrlService.shorten(url, userId);
 
             res.status(201).json({
                 shortCode,
@@ -53,6 +57,17 @@ export class UrlController {
             });
 
             res.redirect(302, longUrl);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    static async getAnalytics(req: Request, res: Response) {
+        try {
+            const { code } = req.params;
+            const data = await AnalyticsService.getAnalytics(code);
+            res.json(data);
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Internal Server Error' });

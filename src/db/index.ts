@@ -55,7 +55,14 @@ db.query = async (text: string, params: any[] = []) => {
         if (text.includes('INSERT INTO urls')) {
             const id = InMemoryStore.idCounter++;
             const originalUrl = params[0];
-            InMemoryStore.urls.set(id, { id, original_url: originalUrl });
+            const userId = params[1] || null; // Expect user_id as 2nd param if provided
+            InMemoryStore.urls.set(id, {
+                id,
+                original_url: originalUrl,
+                user_id: userId,
+                short_code: null, // Will be updated
+                created_at: new Date()
+            });
             return { rows: [{ id }] };
         }
         if (text.includes('UPDATE urls SET short_code')) {
@@ -82,6 +89,11 @@ db.query = async (text: string, params: any[] = []) => {
                 timestamp: params[4]
             });
             return { rowCount: 1 };
+        }
+        if (text.includes('SELECT * FROM analytics')) {
+            const shortCode = params[0];
+            const results = InMemoryStore.analytics.filter(a => a.short_code === shortCode);
+            return { rows: results };
         }
 
         // --- Mock User Queries ---

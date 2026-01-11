@@ -97,6 +97,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     const fullUrl = data.shortUrl.startsWith('http') ? data.shortUrl : `${window.location.origin}/${data.shortCode}`;
 
+                    // SAVE CURRENT CODE
+                    currentShortCode = data.shortCode;
+
+                    // Reset analytics view
+                    document.getElementById('analyticsDisplay').style.display = 'none';
+
                     shortUrl.href = fullUrl;
                     shortUrl.innerText = fullUrl;
                     resultCard.style.display = 'block';
@@ -149,6 +155,52 @@ function updateNavbar(user) {
 async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = 'login.html';
+}
+
+let currentShortCode = '';
+
+async function viewAnalytics() {
+    if (!currentShortCode) return;
+
+    const display = document.getElementById('analyticsDisplay');
+    const lists = document.getElementById('analyticsLists');
+
+    if (display.style.display === 'block') {
+        display.style.display = 'none';
+        return;
+    }
+
+    lists.innerHTML = '<p>Loading...</p>';
+    display.style.display = 'block';
+
+    try {
+        const res = await fetch(`/api/analytics/${currentShortCode}`);
+        if (res.ok) {
+            const data = await res.json(); // Array of { timestamp, ip, userAgent, referer }
+
+            if (data.length === 0) {
+                lists.innerHTML = '<p style="opacity: 0.7;">No clicks recorded yet. Try visiting the short link!</p>';
+                return;
+            }
+
+            lists.innerHTML = data.map(click => `
+                <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.7;">
+                        <span>${new Date(click.timestamp).toLocaleString()}</span>
+                        <span>${click.ip}</span>
+                    </div>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">
+                       ${click.userAgent}
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            lists.innerHTML = '<p>Failed to load analytics. You might need to login.</p>';
+        }
+    } catch (e) {
+        console.error(e);
+        lists.innerHTML = '<p>Error loading data.</p>';
+    }
 }
 
 function copyToClipboard() {

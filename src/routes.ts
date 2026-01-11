@@ -22,6 +22,10 @@ router.get('/api/auth/me', authenticate, AuthController.me);
 router.post('/api/shorten', rateLimiter(10, 'shorten'), authenticate, UrlController.shorten);
 
 // Redirect (100 req/min/IP)
+// Redirect (100 req/min/IP)
 router.get('/:code', rateLimiter(100, 'redirect'), UrlController.redirect);
+
+// Analytics
+router.get('/api/analytics/:code', authenticate, UrlController.getAnalytics);
 
 export default router;
