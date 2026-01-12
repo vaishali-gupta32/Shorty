@@ -10,6 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
+COPY public ./public
 
 # CMD is overridden by docker-compose for specific services (app vs worker)
 CMD ["node", "dist/server.js"]
